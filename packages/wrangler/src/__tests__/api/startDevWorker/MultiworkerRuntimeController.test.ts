@@ -68,6 +68,56 @@ describe("MultiworkerRuntimeController", () => {
 	runInTempDir();
 	const teardown = useTeardown();
 
+	describe("container engine", () => {
+		it("rejects workers configured with different engines", async ({
+			expect,
+		}) => {
+			const bus = new FakeBus();
+			const controller = new MultiworkerRuntimeController(bus, 2);
+			teardown(() => controller.teardown());
+			const primary = configDefaults({
+				name: "worker-a",
+				dev: {
+					persist: "./persist",
+					remote: false,
+					multiworkerPrimary: true,
+					containerEngine: "unix:///first/docker.sock",
+				},
+			});
+			const secondary = configDefaults({
+				name: "worker-b",
+				dev: {
+					persist: "./persist",
+					remote: false,
+					multiworkerPrimary: false,
+					containerEngine: "unix:///second/docker.sock",
+				},
+			});
+			const errorEvent = bus.waitFor("error");
+
+			controller.onBundleStart({ type: "bundleStart", config: primary });
+			controller.onBundleComplete({
+				type: "bundleComplete",
+				config: primary,
+				bundle: makeEsbuildBundle("export default {}"),
+			});
+			controller.onBundleStart({ type: "bundleStart", config: secondary });
+			controller.onBundleComplete({
+				type: "bundleComplete",
+				config: secondary,
+				bundle: makeEsbuildBundle("export default {}"),
+			});
+
+			await expect(errorEvent).resolves.toMatchObject({
+				cause: {
+					message:
+						"All workers in a multiworker configuration must use the same container engine.",
+				},
+				source: "MultiworkerRuntimeController",
+			});
+		});
+	});
+
 	describe("stale bundle bail-out", () => {
 		it("should not bail out when different workers submit bundles", async ({
 			expect,

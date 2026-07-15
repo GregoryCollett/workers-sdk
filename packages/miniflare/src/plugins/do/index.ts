@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import { z } from "zod";
 import { getUserServiceName } from "../core";
 import {
 	getEnvBindingsOfType,
@@ -10,11 +9,8 @@ import {
 import type { Worker_Binding } from "../../runtime";
 import type { Plugin, UnsafeUniqueKey } from "../shared";
 
-// Options for a container attached to the DO
-export const DOContainerOptionsSchema = z.object({
-	imageName: z.string(),
-});
-export type DOContainerOptions = z.infer<typeof DOContainerOptionsSchema>;
+export { DOContainerOptionsSchema } from "./schema";
+export type { DOContainerOptions } from "./schema";
 
 export function getDurableObjectUniqueKey(
 	className: string,

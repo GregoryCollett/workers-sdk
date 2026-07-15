@@ -1,6 +1,10 @@
 import assert from "node:assert";
 import path from "node:path";
-import { resolveDockerHost } from "@cloudflare/containers-shared";
+import {
+	containerPrivilegesAllowed,
+	FUSE_CONTAINER_PRIVILEGES,
+	resolveDockerHost,
+} from "@cloudflare/containers-shared";
 import { extractBindingsOfType } from "@cloudflare/deploy-helpers";
 import {
 	configFileName,
@@ -51,6 +55,7 @@ import type {
 	Trigger,
 	WranglerStartDevWorkerInput,
 } from "./types";
+import type { ContainerPrivileges } from "@cloudflare/containers-shared";
 import type { LoginOrRefreshFailureReason } from "@cloudflare/workers-auth";
 import type { CfUnsafe, Config } from "@cloudflare/workers-utils";
 import type { WorkerRegistry } from "miniflare";
@@ -137,8 +142,24 @@ async function resolveDevConfig(
 
 	const initialIpListenCheck = initialIp === "*" ? "0.0.0.0" : initialIp;
 
+	const enableContainers =
+		input.dev?.enableContainers ?? config.dev.enable_containers;
 	const useContainers =
-		config.dev.enable_containers && config.containers?.length;
+		!input.dev?.remote && enableContainers && config.containers?.length;
+	const dockerPath = input.dev?.dockerPath ?? getDockerPath();
+	const containerEngine = useContainers
+		? (input.dev?.containerEngine ??
+			config.dev.container_engine ??
+			resolveDockerHost(dockerPath))
+		: undefined;
+	const containerPrivileges = containerEngine
+		? getContainerPrivilegesForLocalDev(
+				dockerPath,
+				typeof containerEngine === "string"
+					? containerEngine
+					: containerEngine.localDocker.socketPath
+			)
+		: undefined;
 
 	return {
 		auth,
@@ -175,18 +196,34 @@ async function resolveDevConfig(
 		multiworkerPrimary: input.dev?.multiworkerPrimary,
 		inferOriginFromRoutes: input.dev?.inferOriginFromRoutes ?? true,
 		routeRequestsByRoutes: input.dev?.routeRequestsByRoutes ?? false,
-		enableContainers:
-			input.dev?.enableContainers ?? config.dev.enable_containers,
-		dockerPath: input.dev?.dockerPath ?? getDockerPath(),
-		containerEngine: useContainers
-			? (input.dev?.containerEngine ??
-				config.dev.container_engine ??
-				resolveDockerHost(input.dev?.dockerPath ?? getDockerPath()))
-			: undefined,
+		enableContainers,
+		dockerPath,
+		containerPrivileges,
+		containerEngine,
 		containerBuildId: input.dev?.containerBuildId,
 		generateTypes: input.dev?.generateTypes ?? config.dev.generate_types,
 		tunnel: input.dev?.tunnel,
 	} satisfies StartDevWorkerOptions["dev"];
+}
+
+function getContainerPrivilegesForLocalDev(
+	dockerPath: string,
+	containerEngine: string
+): ContainerPrivileges | undefined {
+	try {
+		if (containerPrivilegesAllowed(dockerPath, containerEngine)) {
+			return FUSE_CONTAINER_PRIVILEGES;
+		}
+	} catch {
+		logger.once.warn(
+			`Unable to verify whether container privileges are safe for Docker endpoint ${JSON.stringify(containerEngine)}. Privileged container features are disabled.`
+		);
+		return undefined;
+	}
+
+	logger.once.warn(
+		"Privileged container features are disabled for this Docker daemon. Use a local Docker engine on macOS or through WSL, or local rootless Docker on Linux with /dev/fuse available."
+	);
 }
 
 /**

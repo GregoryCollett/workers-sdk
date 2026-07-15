@@ -24,6 +24,7 @@ import { getDurableObjectClassNameToUseSQLiteMap } from "../class-names-sqlite";
 import type { StartDevWorkerInput } from "../../api/startDevWorker/types";
 import type { LoggerLevel } from "../../logger";
 import type { EsbuildBundle } from "../use-esbuild";
+import type { ContainerPrivileges } from "@cloudflare/containers-shared";
 import type {
 	AssetsOptions,
 	Binding,
@@ -102,6 +103,7 @@ export interface ConfigBundle {
 	testScheduled: boolean;
 	containerDOClassNames: Set<string> | undefined;
 	containerBuildId: string | undefined;
+	containerPrivileges?: ContainerPrivileges | undefined;
 	containerEngine: ContainerEngine | undefined;
 	enableContainers: boolean;
 	// Zone to use for the CF-Worker header in outbound fetches
@@ -503,6 +505,7 @@ type MiniflareBindingsConfig = Pick<
 	| "complianceRegion"
 	| "containerDOClassNames"
 	| "containerBuildId"
+	| "containerPrivileges"
 	| "enableContainers"
 > &
 	Partial<
@@ -784,6 +787,7 @@ export function buildMiniflareBindingOptions(
 								doClassName: className,
 								containerDOClassNames: config.containerDOClassNames,
 								containerBuildId: config.containerBuildId,
+								containerPrivileges: config.containerPrivileges,
 							})
 						: undefined,
 			});
@@ -1053,6 +1057,7 @@ export function buildMiniflareBindingOptions(
 											doClassName: className,
 											containerDOClassNames: config.containerDOClassNames,
 											containerBuildId: config.containerBuildId,
+											containerPrivileges: config.containerPrivileges,
 										})
 									: undefined,
 						},
@@ -1219,6 +1224,7 @@ export function getImageNameFromDOClassName(options: {
 	doClassName: string;
 	containerDOClassNames: Set<string>;
 	containerBuildId: string | undefined;
+	containerPrivileges?: ContainerPrivileges | undefined;
 }): DOContainerOptions | undefined {
 	assert(
 		options.containerBuildId,
@@ -1231,6 +1237,7 @@ export function getImageNameFromDOClassName(options: {
 				options.doClassName,
 				options.containerBuildId
 			),
+			privileges: options.containerPrivileges,
 		};
 	}
 }

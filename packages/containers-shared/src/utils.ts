@@ -1,9 +1,9 @@
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync, spawn, type StdioOptions } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import { UserError } from "@cloudflare/workers-utils";
 import { dockerImageInspect } from "./inspect";
 import type { ContainerDevOptions } from "./types";
-import type { StdioOptions } from "node:child_process";
 
 /** helper for simple docker command call that don't require any io handling */
 export const runDockerCmd = (
@@ -91,6 +91,70 @@ export const runDockerCmdWithOutput = (dockerPath: string, args: string[]) => {
 		);
 	}
 };
+
+/**
+ * Permit elevated container options only when the selected daemon adds an
+ * isolation boundary. Rootless Docker limits `SYS_ADMIN` to its user
+ * namespace. Local Docker engines on macOS and through WSL run their Linux
+ * daemon in a VM.
+ */
+export function containerPrivilegesAllowed(
+	dockerPath: string,
+	dockerHost: string,
+	platform = process.platform,
+	fuseDeviceExists = existsSync("/dev/fuse"),
+	isWsl = detectWsl(platform)
+): boolean {
+	const output = runDockerCmdWithOutput(dockerPath, [
+		"--host",
+		dockerHost,
+		"info",
+		"--format",
+		"{{json .}}",
+	]);
+	let parsedInfo: unknown;
+	try {
+		parsedInfo = JSON.parse(output);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new UserError(`Failed parsing docker info output: ${message}`, {
+			telemetryMessage: false,
+		});
+	}
+
+	const daemonInfo =
+		typeof parsedInfo === "object" && parsedInfo !== null ? parsedInfo : {};
+	const securityOptions =
+		"SecurityOptions" in daemonInfo ? daemonInfo.SecurityOptions : undefined;
+	const rootless =
+		Array.isArray(securityOptions) &&
+		securityOptions.some(
+			(option) => option === "name=rootless" || option === "rootless"
+		);
+	const localVm =
+		dockerHost.startsWith("unix://") &&
+		(platform === "darwin" || (platform === "linux" && isWsl));
+	const localRootlessLinux =
+		platform === "linux" &&
+		dockerHost.startsWith("unix://") &&
+		fuseDeviceExists &&
+		rootless;
+
+	return localVm || localRootlessLinux;
+}
+
+function detectWsl(platform: NodeJS.Platform): boolean {
+	if (platform !== "linux") {
+		return false;
+	}
+	try {
+		return readFileSync("/proc/sys/kernel/osrelease", "utf8")
+			.toLowerCase()
+			.includes("microsoft");
+	} catch {
+		return false;
+	}
+}
 
 /** Checks whether docker is running on the system */
 export const isDockerRunning = async (dockerPath: string) => {

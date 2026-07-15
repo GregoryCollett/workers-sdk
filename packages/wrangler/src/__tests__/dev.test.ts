@@ -1709,11 +1709,47 @@ describe.sequential("wrangler dev", () => {
 {"Current":false,"Description":"Docker Desktop","DockerEndpoint":"unix:///other/run/docker.sock","Error":"","Name":"desktop-linux"}`;
 
 		beforeEach(async () => {
+			logger.clearHistory();
 			const childProcess = await import("node:child_process");
 			mockExecFileSync = vi.mocked(childProcess.execFileSync);
 
-			mockExecFileSync.mockReturnValue(mockedDockerContextLsOutput);
+			mockExecFileSync.mockImplementation((_dockerPath, args) => {
+				if (Array.isArray(args) && args.includes("info")) {
+					return JSON.stringify({
+						OperatingSystem: "Docker Desktop",
+						SecurityOptions: ["name=rootless"],
+					});
+				}
+
+				return mockedDockerContextLsOutput;
+			});
 		});
+		it("does not inspect Docker when no containers are configured", async ({
+			expect,
+		}) => {
+			writeWranglerConfig({ main: "index.js" });
+			fs.writeFileSync("index.js", `export default {};`);
+
+			const config = await runWranglerUntilConfig("dev");
+
+			expect(config.dev.containerPrivileges).toBeUndefined();
+			expect(config.dev.containerEngine).toBeUndefined();
+			expect(mockExecFileSync).not.toHaveBeenCalled();
+		});
+		it("does not inspect Docker in remote mode", async ({ expect }) => {
+			writeWranglerConfig({
+				main: "index.js",
+				...minimalContainerConfig,
+			});
+			fs.writeFileSync("index.js", `export default {};`);
+
+			const config = await runWranglerUntilConfig("dev --remote");
+
+			expect(config.dev.containerPrivileges).toBeUndefined();
+			expect(config.dev.containerEngine).toBeUndefined();
+			expect(mockExecFileSync).not.toHaveBeenCalled();
+		});
+
 		it("should default to socket of current docker context", async ({
 			expect,
 		}) => {
@@ -1725,6 +1761,17 @@ describe.sequential("wrangler dev", () => {
 			const config = await runWranglerUntilConfig("dev");
 			expect(config.dev.containerEngine).toEqual(
 				"unix:///current/run/docker.sock"
+			);
+			expect(mockExecFileSync).toHaveBeenCalledWith(
+				"docker",
+				[
+					"--host",
+					"unix:///current/run/docker.sock",
+					"info",
+					"--format",
+					"{{json .}}",
+				],
+				{ encoding: "utf8" }
 			);
 		});
 
@@ -1741,7 +1788,58 @@ describe.sequential("wrangler dev", () => {
 
 			const config = await runWranglerUntilConfig("dev");
 			expect(config.dev.containerEngine).toEqual("test.sock");
+			expect(mockExecFileSync).toHaveBeenCalledWith(
+				"docker",
+				["--host", "test.sock", "info", "--format", "{{json .}}"],
+				{ encoding: "utf8" }
+			);
 		});
+
+		it("warns when container privileges are disabled", async ({ expect }) => {
+			writeWranglerConfig({
+				main: "index.js",
+				dev: { container_engine: "tcp://docker.example.com:2375" },
+				...minimalContainerConfig,
+			});
+			fs.writeFileSync("index.js", `export default {};`);
+			mockExecFileSync.mockImplementation((_dockerPath, args) => {
+				return Array.isArray(args) && args.includes("info")
+					? JSON.stringify({ SecurityOptions: ["name=seccomp"] })
+					: mockedDockerContextLsOutput;
+			});
+
+			const config = await runWranglerUntilConfig("dev");
+
+			expect(config.dev.containerPrivileges).toBeUndefined();
+			expect(std.warn).toContain(
+				"Privileged container features are disabled for this Docker daemon. Use a local Docker engine on macOS or through WSL, or local rootless Docker on Linux with /dev/fuse available."
+			);
+		});
+
+		it("warns when the selected Docker endpoint cannot be inspected", async ({
+			expect,
+		}) => {
+			writeWranglerConfig({
+				main: "index.js",
+				dev: { container_engine: "unix:///broken/docker.sock" },
+				...minimalContainerConfig,
+			});
+			fs.writeFileSync("index.js", `export default {};`);
+			mockExecFileSync.mockImplementation((_dockerPath, args) => {
+				if (Array.isArray(args) && args.includes("info")) {
+					throw new Error("endpoint unavailable");
+				}
+				return mockedDockerContextLsOutput;
+			});
+
+			const config = await runWranglerUntilConfig("dev");
+
+			expect(config.dev.containerPrivileges).toBeUndefined();
+			expect(std.warn).toContain(
+				'Unable to verify whether container privileges are safe for Docker endpoint "unix:///broken/docker.sock". Privileged container features are disabled.'
+			);
+		});
+
 		it("should be able to be set by env var", async ({ expect }) => {
 			writeWranglerConfig({
 				main: "index.js",

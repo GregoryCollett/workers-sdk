@@ -2556,11 +2556,149 @@ export class Worker_Binding extends $.Struct {
 		return $.utils.getUint16(0, this) as Worker_Binding_Which;
 	}
 }
+export class Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device
+	extends $.Struct
+{
+	static readonly _capnp = {
+		displayName: "Device",
+		id: "83f9125afacda809",
+		size: new $.ObjectSize(0, 3),
+	};
+	get pathOnHost(): string {
+		return $.utils.getText(0, this);
+	}
+	set pathOnHost(value: string) {
+		$.utils.setText(0, value, this);
+	}
+	get pathInContainer(): string {
+		return $.utils.getText(1, this);
+	}
+	set pathInContainer(value: string) {
+		$.utils.setText(1, value, this);
+	}
+	get cgroupPermissions(): string {
+		return $.utils.getText(2, this);
+	}
+	set cgroupPermissions(value: string) {
+		$.utils.setText(2, value, this);
+	}
+	toString(): string {
+		return (
+			"Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device_" +
+			super.toString()
+		);
+	}
+}
+export class Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges
+	extends $.Struct
+{
+	static readonly Device =
+		Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device;
+	static readonly _capnp = {
+		displayName: "ContainerPrivileges",
+		id: "ca910fa0c4c988bf",
+		size: new $.ObjectSize(0, 3),
+	};
+	static _Devices: $.ListCtor<Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device>;
+	_adoptCapabilities(value: $.Orphan<$.List<string>>): void {
+		$.utils.adopt(value, $.utils.getPointer(0, this));
+	}
+	_disownCapabilities(): $.Orphan<$.List<string>> {
+		return $.utils.disown(this.capabilities);
+	}
+	/**
+	 * Docker HostConfig.CapAdd values.
+	 *
+	 */
+	get capabilities(): $.List<string> {
+		return $.utils.getList(0, $.TextList, this);
+	}
+	_hasCapabilities(): boolean {
+		return !$.utils.isNull($.utils.getPointer(0, this));
+	}
+	_initCapabilities(length: number): $.List<string> {
+		return $.utils.initList(0, $.TextList, length, this);
+	}
+	set capabilities(value: $.List<string>) {
+		$.utils.copyFrom(value, $.utils.getPointer(0, this));
+	}
+	_adoptDevices(
+		value: $.Orphan<
+			$.List<Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device>
+		>
+	): void {
+		$.utils.adopt(value, $.utils.getPointer(1, this));
+	}
+	_disownDevices(): $.Orphan<
+		$.List<Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device>
+	> {
+		return $.utils.disown(this.devices);
+	}
+	/**
+	 * Docker HostConfig.Devices values.
+	 *
+	 */
+	get devices(): $.List<Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device> {
+		return $.utils.getList(
+			1,
+			Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges._Devices,
+			this
+		);
+	}
+	_hasDevices(): boolean {
+		return !$.utils.isNull($.utils.getPointer(1, this));
+	}
+	_initDevices(
+		length: number
+	): $.List<Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device> {
+		return $.utils.initList(
+			1,
+			Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges._Devices,
+			length,
+			this
+		);
+	}
+	set devices(
+		value: $.List<Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device>
+	) {
+		$.utils.copyFrom(value, $.utils.getPointer(1, this));
+	}
+	_adoptSecurityOpt(value: $.Orphan<$.List<string>>): void {
+		$.utils.adopt(value, $.utils.getPointer(2, this));
+	}
+	_disownSecurityOpt(): $.Orphan<$.List<string>> {
+		return $.utils.disown(this.securityOpt);
+	}
+	/**
+	 * Docker HostConfig.SecurityOpt values.
+	 *
+	 */
+	get securityOpt(): $.List<string> {
+		return $.utils.getList(2, $.TextList, this);
+	}
+	_hasSecurityOpt(): boolean {
+		return !$.utils.isNull($.utils.getPointer(2, this));
+	}
+	_initSecurityOpt(length: number): $.List<string> {
+		return $.utils.initList(2, $.TextList, length, this);
+	}
+	set securityOpt(value: $.List<string>) {
+		$.utils.copyFrom(value, $.utils.getPointer(2, this));
+	}
+	toString(): string {
+		return (
+			"Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_" +
+			super.toString()
+		);
+	}
+}
 export class Worker_DurableObjectNamespace_ContainerOptions extends $.Struct {
+	static readonly ContainerPrivileges =
+		Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges;
 	static readonly _capnp = {
 		displayName: "ContainerOptions",
 		id: "a609621a4d236cd7",
-		size: new $.ObjectSize(0, 1),
+		size: new $.ObjectSize(0, 2),
 	};
 	/**
 	 * Image name to be used to create the container using supported provider.
@@ -2572,6 +2710,44 @@ export class Worker_DurableObjectNamespace_ContainerOptions extends $.Struct {
 	}
 	set imageName(value: string) {
 		$.utils.setText(0, value, this);
+	}
+	_adoptPrivileges(
+		value: $.Orphan<Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges>
+	): void {
+		$.utils.adopt(value, $.utils.getPointer(1, this));
+	}
+	_disownPrivileges(): $.Orphan<Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges> {
+		return $.utils.disown(this.privileges);
+	}
+	/**
+	 * Extra Docker HostConfig privileges applied when creating the container.
+	 * These fields are passed through to Docker as-is and are empty by default.
+	 * They are not validated or allow-listed. Depending on the values and Docker daemon mode,
+	 * they can expose arbitrary host devices, disable security profiles, or grant capabilities
+	 * such as CAP_SYS_ADMIN that may provide host-level access. Only use trusted configuration.
+	 *
+	 */
+	get privileges(): Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges {
+		return $.utils.getStruct(
+			1,
+			Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges,
+			this
+		);
+	}
+	_hasPrivileges(): boolean {
+		return !$.utils.isNull($.utils.getPointer(1, this));
+	}
+	_initPrivileges(): Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges {
+		return $.utils.initStructAt(
+			1,
+			Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges,
+			this
+		);
+	}
+	set privileges(
+		value: Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges
+	) {
+		$.utils.copyFrom(value, $.utils.getPointer(1, this));
 	}
 	toString(): string {
 		return "Worker_DurableObjectNamespace_ContainerOptions_" + super.toString();
@@ -4261,6 +4437,10 @@ Config._Services = $.CompositeList(Service);
 Config._Sockets = $.CompositeList(Socket);
 Config._Extensions = $.CompositeList(Extension);
 Worker_Binding_WrappedBinding._InnerBindings = $.CompositeList(Worker_Binding);
+Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges._Devices =
+	$.CompositeList(
+		Worker_DurableObjectNamespace_ContainerOptions_ContainerPrivileges_Device
+	);
 Worker._Modules = $.CompositeList(Worker_Module);
 Worker._Bindings = $.CompositeList(Worker_Binding);
 Worker._DurableObjectNamespaces = $.CompositeList(

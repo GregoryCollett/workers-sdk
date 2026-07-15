@@ -4,6 +4,7 @@ import { beforeEach, describe, it, vi } from "vitest";
 import {
 	checkExposedPorts,
 	cleanupDuplicateImageTags,
+	containerPrivilegesAllowed,
 	verifyDockerInstalled,
 } from "./../src/utils";
 import type { ContainerDevOptions } from "../src/types";
@@ -94,6 +95,161 @@ describe("cleanupDuplicateImageTags", () => {
 			["rmi", "cloudflare-dev/egresstestcontainer:build-122"],
 			{ encoding: "utf8" }
 		);
+	});
+});
+
+describe("containerPrivilegesAllowed", () => {
+	beforeEach(() => {
+		vi.mocked(execFileSync).mockReset();
+	});
+
+	it("allows privileges with rootless Docker on Linux", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({
+				SecurityOptions: ["name=seccomp", "name=rootless"],
+			})
+		);
+
+		expect(
+			containerPrivilegesAllowed(
+				"docker",
+				"unix:///run/user/1000/docker.sock",
+				"linux",
+				true
+			)
+		).toBe(true);
+		expect(execFileSync).toHaveBeenCalledWith(
+			"docker",
+			[
+				"--host",
+				"unix:///run/user/1000/docker.sock",
+				"info",
+				"--format",
+				"{{json .}}",
+			],
+			{ encoding: "utf8" }
+		);
+	});
+
+	it("allows local VM-backed Docker engines on macOS", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({
+				OperatingSystem: "Docker Desktop",
+				SecurityOptions: ["name=seccomp"],
+			})
+		);
+
+		expect(
+			containerPrivilegesAllowed(
+				"docker",
+				"unix:///var/run/docker.sock",
+				"darwin"
+			)
+		).toBe(true);
+	});
+
+	it("allows Colima-like Linux guests on macOS", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({
+				OperatingSystem: "Ubuntu 24.04.2 LTS",
+				SecurityOptions: ["name=seccomp"],
+			})
+		);
+
+		expect(
+			containerPrivilegesAllowed(
+				"docker",
+				"unix:///Users/example/.colima/default/docker.sock",
+				"darwin"
+			)
+		).toBe(true);
+	});
+
+	it("blocks remote Docker on non-Linux hosts", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({ SecurityOptions: ["name=rootless"] })
+		);
+
+		expect(
+			containerPrivilegesAllowed(
+				"docker",
+				"tcp://docker.example.com:2375",
+				"darwin"
+			)
+		).toBe(false);
+	});
+
+	it("blocks Windows until workerd supports named pipes", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({ SecurityOptions: ["name=rootless"] })
+		);
+
+		expect(
+			containerPrivilegesAllowed("docker", "//./pipe/docker_engine", "win32")
+		).toBe(false);
+	});
+
+	it("blocks unsupported non-Linux hosts", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({ SecurityOptions: ["name=rootless"] })
+		);
+
+		expect(
+			containerPrivilegesAllowed(
+				"docker",
+				"unix:///var/run/docker.sock",
+				"freebsd"
+			)
+		).toBe(false);
+	});
+
+	it("allows VM-backed Docker engines through WSL", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({
+				OperatingSystem: "Docker Desktop",
+				SecurityOptions: ["name=seccomp"],
+			})
+		);
+
+		expect(
+			containerPrivilegesAllowed(
+				"docker",
+				"unix:///var/run/docker.sock",
+				"linux",
+				false,
+				true
+			)
+		).toBe(true);
+	});
+
+	it("blocks rootless Docker on Linux without /dev/fuse", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({ SecurityOptions: ["name=rootless"] })
+		);
+
+		expect(
+			containerPrivilegesAllowed(
+				"docker",
+				"unix:///run/user/1000/docker.sock",
+				"linux",
+				false
+			)
+		).toBe(false);
+	});
+
+	it("blocks rootful Docker on Linux", ({ expect }) => {
+		vi.mocked(execFileSync).mockReturnValue(
+			JSON.stringify({ SecurityOptions: ["name=seccomp"] })
+		);
+
+		expect(
+			containerPrivilegesAllowed(
+				"docker",
+				"unix:///var/run/docker.sock",
+				"linux",
+				true
+			)
+		).toBe(false);
 	});
 });
 

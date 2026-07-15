@@ -3,6 +3,7 @@ import {
 	RouterConfigSchema,
 } from "@cloudflare/workers-shared";
 import { z } from "zod";
+import { DOContainerOptionsSchema } from "../plugins/do/schema";
 import {
 	HttpOptions_Style,
 	TlsOptions_Version,
@@ -11,6 +12,7 @@ import { Log } from "../shared";
 import { kCurrentWorker } from "./current-worker";
 import type { Request, Response } from "../http";
 import type { Miniflare } from "../index";
+import type { DOContainerOptions } from "../plugins/do/schema";
 import type { RemoteProxyConnectionString } from "../plugins/shared";
 import type { Json } from "../shared";
 import type { WorkerRegistry } from "../shared/dev-registry-types";
@@ -239,7 +241,7 @@ const V4DurableObjectSchema = z.object({
 		.optional(),
 	unsafePreventEviction: z.boolean().optional(),
 	remoteProxyConnectionString: RemoteProxyConnectionStringSchema.optional(),
-	container: z.object({ imageName: z.string() }).optional(),
+	container: DOContainerOptionsSchema.optional(),
 });
 
 const V4QueueMessageDelaySchema = z.number().int().min(0).max(86400).optional();
@@ -731,7 +733,7 @@ export type V4DurableObject = {
 	unsafeUniqueKey?: string | symbol;
 	unsafePreventEviction?: boolean;
 	remoteProxyConnectionString?: RemoteProxyConnectionString;
-	container?: { imageName: string };
+	container?: DOContainerOptions;
 };
 export type V4QueueProducerOptions = {
 	queueName: string;

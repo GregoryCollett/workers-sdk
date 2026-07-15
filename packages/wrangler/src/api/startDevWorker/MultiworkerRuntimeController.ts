@@ -1,7 +1,8 @@
 import assert from "node:assert";
 import { randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { prepareContainerImagesForDev } from "@cloudflare/containers-shared";
-import { getDockerPath } from "@cloudflare/workers-utils";
+import { getDockerPath, UserError } from "@cloudflare/workers-utils";
 import chalk from "chalk";
 import { convertV4MiniflareOptions, Miniflare, Mutex } from "miniflare";
 import * as MF from "../../dev/miniflare";
@@ -114,9 +115,20 @@ export class MultiworkerRuntimeController extends LocalRuntimeController {
 		// merged options only spread the primary worker's top-level options.
 		// `containerEngine` is only set if containers are present in a specific worker,
 		// so we need to check all workers for containers
-		const containerEngine = [...this.#options.values()]
+		const containerEngines = [...this.#options.values()]
 			.map((o) => o.options.containerEngine)
-			.find((engine) => engine !== undefined);
+			.filter((engine) => engine !== undefined);
+		const containerEngine = containerEngines[0];
+		if (
+			containerEngines.some(
+				(engine) => !isDeepStrictEqual(engine, containerEngine)
+			)
+		) {
+			throw new UserError(
+				"All workers in a multiworker configuration must use the same container engine.",
+				{ telemetryMessage: false }
+			);
+		}
 
 		return {
 			...primary.options,

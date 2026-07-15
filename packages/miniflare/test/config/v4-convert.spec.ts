@@ -17,6 +17,20 @@ describe("convertV4MiniflareOptions", () => {
 					useSQLite: true,
 					unsafeUniqueKey: "local-key",
 					unsafePreventEviction: true,
+					container: {
+						imageName: "container-image",
+						privileges: {
+							capabilities: ["SYS_ADMIN"],
+							devices: [
+								{
+									pathOnHost: "/dev/fuse",
+									pathInContainer: "/dev/fuse",
+									cgroupPermissions: "rwm",
+								},
+							],
+							securityOpt: ["apparmor:unconfined"],
+						},
+					},
 				},
 				SELF_EXPLICIT: {
 					className: "SelfExplicitObject",
@@ -55,6 +69,20 @@ describe("convertV4MiniflareOptions", () => {
 				storage: "sqlite",
 				unsafeUniqueKey: "local-key",
 				unsafePreventEviction: true,
+				container: {
+					imageName: "container-image",
+					privileges: {
+						capabilities: ["SYS_ADMIN"],
+						devices: [
+							{
+								pathOnHost: "/dev/fuse",
+								pathInContainer: "/dev/fuse",
+								cgroupPermissions: "rwm",
+							},
+						],
+						securityOpt: ["apparmor:unconfined"],
+					},
+				},
 			},
 			SelfExplicitObject: {
 				type: "durable-object",
