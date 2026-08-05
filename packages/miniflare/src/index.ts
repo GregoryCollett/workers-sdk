@@ -2085,9 +2085,7 @@ export class Miniflare {
 			 */
 			fallbackWorkerName:
 				this.#workerOpts[0].config.assets &&
-				!this.#workerOpts[0].config.name.startsWith(
-					"vitest-pool-workers-runner-"
-				)
+				!this.#workerOpts[0].config.name.startsWith("vitest-plugin-runner-")
 					? `${RPC_PROXY_SERVICE_NAME}:${this.#workerOpts[0].config.name}`
 					: getUserServiceName(this.#workerOpts[0].config.name),
 			tmpPath: this.#tmpPath,
