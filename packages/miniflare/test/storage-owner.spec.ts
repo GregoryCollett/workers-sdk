@@ -804,7 +804,7 @@ describe.sequential("owner presence integration", () => {
 		}
 	});
 
-	it("does nothing when the feature flag is off", async ({ expect }) => {
+	it("does nothing when the feature flag is off", async () => {
 		const persistRoot = await useTmp();
 		const registryPath = await useTmp();
 		const mf = new Miniflare({
