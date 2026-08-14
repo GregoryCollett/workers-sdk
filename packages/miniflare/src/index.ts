@@ -3215,6 +3215,7 @@ export class Miniflare {
 				R2_PLUGIN_NAME,
 				RATELIMIT_PLUGIN_NAME,
 				SECRET_STORE_PLUGIN_NAME,
+				STREAM_PLUGIN_NAME,
 			].includes(pluginName)
 		) {
 			throw new TypeError(
