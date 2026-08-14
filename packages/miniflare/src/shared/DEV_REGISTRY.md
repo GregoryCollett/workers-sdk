@@ -84,7 +84,7 @@ When `unsafeEnableSharedStorage` is enabled, each Miniflare instance registers a
 
 Storage candidates heartbeat every 2 seconds. Registry watchers also refresh on a timer so a dead candidate expires without requiring another filesystem event. A stale candidate is removed only after its Node process is no longer alive, preventing a delayed event loop from creating two active owners. Graceful disposal stops the runtime before withdrawing its candidate, preventing overlap with the replacement owner.
 
-KV, D1, R2, Rate Limits, and Secrets Store route through the elected candidate. Cache, user Durable Objects, Workflows, observability, and Hello World storage remain instance-local while shared mode is active and use the configured `isolatedResourcePersistencePath`, allowing that state to persist across restarts without mounting the shared owner root concurrently.
+KV, D1, R2, Rate Limits, Secrets Store, and Images data route through the elected candidate. Cache, user Durable Objects, Workflows, observability, and Hello World storage remain instance-local while shared mode is active and use the configured `isolatedResourcePersistencePath`, allowing that state to persist across restarts without mounting the shared owner root concurrently.
 
 Shared mode requires `resourcePersistencePath`, `isolatedResourcePersistencePath`, and `unsafeDevRegistryPath`. The shared persistence root is created and resolved through the filesystem before it is used as an ownership scope.
 
