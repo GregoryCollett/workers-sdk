@@ -622,7 +622,7 @@ describe("deploy", () => {
 				framework: {
 					id: "cloudflare-pages",
 					name: "Cloudflare Pages",
-					configure: async () => ({ wranglerConfig: {} }),
+					configure: async () => ({ workerConfig: {} }),
 					isConfigured: () => false,
 				} as unknown as Framework,
 				outputDir: "public",
@@ -662,7 +662,7 @@ describe("deploy", () => {
 				framework: {
 					id: "cloudflare-pages",
 					name: "Cloudflare Pages",
-					configure: async () => ({ wranglerConfig: {} }),
+					configure: async () => ({ workerConfig: {} }),
 					isConfigured: () => false,
 				} as unknown as Framework,
 				outputDir: "public",

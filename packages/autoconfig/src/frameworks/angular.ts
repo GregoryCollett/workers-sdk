@@ -34,23 +34,20 @@ export class Angular extends Framework {
 				await installAdditionalDependencies(packageManager, isWorkspaceRoot);
 			}
 			return {
-				wranglerConfig: {
-					main: "./dist/server/server.mjs",
-					assets: {
-						binding: "ASSETS",
-						directory: `${outputDir}browser`,
+				workerConfig: {
+					entrypoint: "./dist/server/server.mjs",
+					env: {
+						ASSETS: { type: "assets" },
 					},
 				},
+				buildConfig: { assetsDirectory: `${outputDir}browser` },
 			};
 		} else {
 			this.configurationDescription =
 				"Configuring Angular SPA project (assets only)";
 			return {
-				wranglerConfig: {
-					assets: {
-						directory: outputDir,
-					},
-				},
+				workerConfig: {},
+				buildConfig: { assetsDirectory: outputDir },
 			};
 		}
 	}

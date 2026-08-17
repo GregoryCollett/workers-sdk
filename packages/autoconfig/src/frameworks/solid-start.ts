@@ -27,13 +27,13 @@ export class SolidStart extends Framework {
 		}
 
 		return {
-			wranglerConfig: {
-				main: "./.output/server/index.mjs",
-				assets: {
-					binding: "ASSETS",
-					directory: "./.output/public",
+			workerConfig: {
+				entrypoint: "./.output/server/index.mjs",
+				env: {
+					ASSETS: { type: "assets" },
 				},
 			},
+			buildConfig: { assetsDirectory: "./.output/public" },
 		};
 	}
 }

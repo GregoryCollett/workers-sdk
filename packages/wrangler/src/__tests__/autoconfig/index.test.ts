@@ -84,6 +84,7 @@ describe("autoconfig wrappers", () => {
 			expect(getDetailsForAutoConfig).toHaveBeenCalledOnce();
 			expect(getDetailsForAutoConfig).toHaveBeenCalledWith({
 				wranglerConfig: mockConfig,
+				target: "wrangler",
 				context: mockContext,
 			});
 			expect(result).toBe(mockDetails);
@@ -196,7 +197,10 @@ describe("autoconfig wrappers", () => {
 			const result = await runAutoConfigLogic(mockDetails, options);
 
 			expect(runAutoConfig).toHaveBeenCalledOnce();
-			expect(runAutoConfig).toHaveBeenCalledWith(mockDetails, options);
+			expect(runAutoConfig).toHaveBeenCalledWith(mockDetails, {
+				...options,
+				target: "wrangler",
+			});
 			expect(result).toBe(mockSummary);
 		});
 

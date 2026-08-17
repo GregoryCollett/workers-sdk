@@ -24,8 +24,8 @@ export class TanstackStart extends Framework {
 		}
 
 		return {
-			wranglerConfig: {
-				main: "@tanstack/react-start/server-entry",
+			workerConfig: {
+				entrypoint: "@tanstack/react-start/server-entry",
 			},
 		};
 	}

@@ -60,8 +60,8 @@ export class Vike extends Framework {
 		}
 
 		return {
-			wranglerConfig: {
-				main: "virtual:photon:cloudflare:server-entry",
+			workerConfig: {
+				entrypoint: "virtual:photon:cloudflare:server-entry",
 			},
 			packageJsonScriptsOverrides: {
 				preview: "vike build && vike preview",

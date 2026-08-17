@@ -514,8 +514,8 @@ export class ReactRouter extends Framework {
 		}
 
 		return {
-			wranglerConfig: {
-				main: "./workers/app.ts",
+			workerConfig: {
+				entrypoint: "./workers/app.ts",
 			},
 		};
 	}
