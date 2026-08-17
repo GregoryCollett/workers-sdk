@@ -503,6 +503,7 @@ export interface CfWorkerInit {
 	limits: CfUserLimits | undefined;
 	annotations?: Record<string, string | undefined>;
 	keep_assets?: boolean | undefined;
+	retain_assets?: { enabled: boolean } | undefined;
 	assets:
 		| {
 				jwt: string;

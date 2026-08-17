@@ -676,6 +676,9 @@ function convertBindingsAndAssets(
 		if (config.assets?.runWorkerFirst !== undefined) {
 			assets.run_worker_first = config.assets.runWorkerFirst;
 		}
+		if (config.assets?.retainAssets !== undefined) {
+			assets.retain_assets = config.assets.retainAssets;
+		}
 		result.assets = assets;
 	}
 }

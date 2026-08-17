@@ -3172,6 +3172,34 @@ const validateAssetsConfig: ValidatorFn = (diagnostics, field, value) => {
 			isValid = false;
 		}
 	}
+
+	if ((value as Assets).retain_assets !== undefined) {
+		const retainAssets = (value as Assets).retain_assets;
+		if (typeof retainAssets !== "object" || retainAssets === null) {
+			diagnostics.errors.push(
+				`Expected "assets.retain_assets" to be an object but got ${JSON.stringify(retainAssets)}.`
+			);
+			isValid = false;
+		} else {
+			isValid =
+				validateRequiredProperty(
+					diagnostics,
+					`${field}.retain_assets`,
+					"enabled",
+					(retainAssets as { enabled: unknown }).enabled,
+					"boolean"
+				) && isValid;
+
+			isValid =
+				validateAdditionalProperties(
+					diagnostics,
+					`${field}.retain_assets`,
+					Object.keys(retainAssets),
+					["enabled"]
+				) && isValid;
+		}
+	}
+
 	isValid =
 		validateAdditionalProperties(diagnostics, field, Object.keys(value), [
 			"directory",
@@ -3179,6 +3207,7 @@ const validateAssetsConfig: ValidatorFn = (diagnostics, field, value) => {
 			"html_handling",
 			"not_found_handling",
 			"run_worker_first",
+			"retain_assets",
 		]) && isValid;
 
 	return isValid;

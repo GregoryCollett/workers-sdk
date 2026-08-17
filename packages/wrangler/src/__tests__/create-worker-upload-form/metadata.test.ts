@@ -264,6 +264,12 @@ describe("createWorkerUploadForm — optional metadata fields", () => {
 			expected: [{ name: "my-container" }],
 		},
 		{
+			label: "retain_assets",
+			overrides: { retain_assets: { enabled: true } },
+			key: "retain_assets",
+			expected: { enabled: true },
+		},
+		{
 			label: "annotations",
 			overrides: {
 				annotations: {
@@ -360,5 +366,24 @@ describe("createWorkerUploadForm — static assets only", () => {
 		const metadata = getMetadata(form);
 		expect(metadata.compatibility_date).toBe("2024-06-01");
 		expect(metadata.compatibility_flags).toEqual(["nodejs_compat"]);
+	});
+
+	it("should include retain_assets in assets-only metadata when specified", ({
+		expect,
+	}) => {
+		const worker = createEsmWorker({
+			retain_assets: { enabled: true },
+			assets: {
+				routerConfig: { has_user_worker: false },
+				jwt: "test-jwt",
+				assetConfig: {
+					html_handling: "auto-trailing-slash",
+					not_found_handling: "none",
+				},
+			} as CfWorkerInit["assets"],
+		});
+		const form = createWorkerUploadForm(worker, {});
+		const metadata = getMetadata(form);
+		expect(metadata.retain_assets).toEqual({ enabled: true });
 	});
 });

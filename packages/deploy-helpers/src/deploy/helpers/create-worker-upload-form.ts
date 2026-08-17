@@ -77,6 +77,7 @@ export function createWorkerUploadForm(
 		limits,
 		annotations,
 		keep_assets,
+		retain_assets,
 		assets,
 		observability,
 		cache,
@@ -103,6 +104,7 @@ export function createWorkerUploadForm(
 				...(annotations && { annotations }),
 				...(compatibility_date && { compatibility_date }),
 				...(compatibility_flags && { compatibility_flags }),
+				...(retain_assets !== undefined && { retain_assets }),
 			})
 		);
 		return formData;
@@ -898,6 +900,7 @@ export function createWorkerUploadForm(
 		...(limits && { limits }),
 		...(annotations && { annotations }),
 		...(keep_assets !== undefined && { keep_assets }),
+		...(retain_assets !== undefined && { retain_assets }),
 		...(assets && {
 			assets: {
 				jwt: assets.jwt,

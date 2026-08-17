@@ -313,6 +313,7 @@ export default async function deploy(
 						"workers/tag": props.tag,
 					}
 				: undefined,
+		retain_assets: config.assets?.retain_assets,
 		assets:
 			assetsOptions && assetsJwt
 				? {
@@ -758,6 +759,13 @@ export default async function deploy(
 	});
 
 	logger.log("Current Version ID:", versionId);
+
+	if (config.assets?.retain_assets?.enabled) {
+		logger.log(
+			"Asset retention is enabled. Previously deployed assets from the last 24 hours" +
+				" (including deleted paths) are immediately reachable."
+		);
+	}
 
 	return {
 		sourceMapSize,

@@ -176,6 +176,7 @@ export default async function versionsUpload(
 			"workers/tag": props.tag,
 			"workers/alias": props.previewAlias,
 		},
+		retain_assets: config.assets?.retain_assets,
 		assets:
 			assetsOptions && assetsJwt
 				? {
@@ -390,6 +391,13 @@ export default async function versionsUpload(
 
 	logger.log("Uploaded", workerName, formatTime(uploadMs));
 	logger.log("Worker Version ID:", versionId);
+
+	if (config.assets?.retain_assets?.enabled) {
+		logger.log(
+			"Asset retention is enabled. Previously deployed assets from the last 24 hours" +
+				" (including deleted paths) are immediately reachable."
+		);
+	}
 
 	let versionPreviewUrl: string | undefined = undefined;
 	let versionPreviewAliasUrl: string | undefined = undefined;

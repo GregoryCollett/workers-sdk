@@ -3475,6 +3475,143 @@ describe("normalizeAndValidateConfig()", () => {
 				`);
 				expect(diagnostics.hasErrors()).toBeFalsy();
 			});
+
+			it("should accept valid `retain_assets` with enabled: true", ({
+				expect,
+			}) => {
+				const expectedConfig: RawConfig = {
+					assets: {
+						directory: "./public",
+						retain_assets: { enabled: true },
+					},
+				};
+
+				const { config, diagnostics } = normalizeAndValidateConfig(
+					expectedConfig,
+					undefined,
+					undefined,
+					{ env: undefined }
+				);
+
+				expect(config).toEqual(expect.objectContaining(expectedConfig));
+				expect(diagnostics.hasWarnings()).toBe(false);
+				expect(diagnostics.hasErrors()).toBe(false);
+			});
+
+			it("should accept valid `retain_assets` with enabled: false", ({
+				expect,
+			}) => {
+				const expectedConfig: RawConfig = {
+					assets: {
+						directory: "./public",
+						retain_assets: { enabled: false },
+					},
+				};
+
+				const { config, diagnostics } = normalizeAndValidateConfig(
+					expectedConfig,
+					undefined,
+					undefined,
+					{ env: undefined }
+				);
+
+				expect(config).toEqual(expect.objectContaining(expectedConfig));
+				expect(diagnostics.hasWarnings()).toBe(false);
+				expect(diagnostics.hasErrors()).toBe(false);
+			});
+
+			it("should error on bare boolean `retain_assets`", ({ expect }) => {
+				const expectedConfig = {
+					assets: {
+						directory: "./public",
+						retain_assets: true,
+					},
+				};
+
+				const { diagnostics } = normalizeAndValidateConfig(
+					expectedConfig as unknown as RawConfig,
+					undefined,
+					undefined,
+					{ env: undefined }
+				);
+
+				expect(diagnostics.hasErrors()).toBe(true);
+				expect(diagnostics.renderErrors()).toMatchInlineSnapshot(`
+					"Processing wrangler configuration:
+					  - Expected "assets.retain_assets" to be an object but got true."
+				`);
+			});
+
+			it("should error on invalid `retain_assets.enabled` type", ({
+				expect,
+			}) => {
+				const expectedConfig = {
+					assets: {
+						directory: "./public",
+						retain_assets: { enabled: "yes" },
+					},
+				};
+
+				const { diagnostics } = normalizeAndValidateConfig(
+					expectedConfig as unknown as RawConfig,
+					undefined,
+					undefined,
+					{ env: undefined }
+				);
+
+				expect(diagnostics.hasErrors()).toBe(true);
+				expect(diagnostics.renderErrors()).toMatchInlineSnapshot(`
+					"Processing wrangler configuration:
+					  - Expected "assets.retain_assets.enabled" to be of type boolean but got "yes"."
+				`);
+			});
+
+			it("should error on missing `retain_assets.enabled`", ({ expect }) => {
+				const expectedConfig = {
+					assets: {
+						directory: "./public",
+						retain_assets: {},
+					},
+				};
+
+				const { diagnostics } = normalizeAndValidateConfig(
+					expectedConfig as unknown as RawConfig,
+					undefined,
+					undefined,
+					{ env: undefined }
+				);
+
+				expect(diagnostics.hasErrors()).toBe(true);
+				expect(diagnostics.renderErrors()).toMatchInlineSnapshot(`
+					"Processing wrangler configuration:
+					  - "assets.retain_assets.enabled" is a required field."
+				`);
+			});
+
+			it("should warn on unexpected fields in `retain_assets`", ({
+				expect,
+			}) => {
+				const expectedConfig = {
+					assets: {
+						directory: "./public",
+						retain_assets: { enabled: true, unknown_field: "bad" },
+					},
+				};
+
+				const { diagnostics } = normalizeAndValidateConfig(
+					expectedConfig as unknown as RawConfig,
+					undefined,
+					undefined,
+					{ env: undefined }
+				);
+
+				expect(diagnostics.hasErrors()).toBe(false);
+				expect(diagnostics.hasWarnings()).toBe(true);
+				expect(diagnostics.renderWarnings()).toMatchInlineSnapshot(`
+					"Processing wrangler configuration:
+					  - Unexpected fields found in assets.retain_assets field: "unknown_field""
+				`);
+			});
 		});
 
 		describe("[browser]", () => {
