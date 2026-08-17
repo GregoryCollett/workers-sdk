@@ -6,12 +6,12 @@
  *   export default defineWorkersProject({ test: { poolOptions: { workers: { ... } } } });
  *
  * Into:
- *   import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
+ *   import { cloudflareTest } from "@cloudflare/vitest-plugin";
  *   import { defineConfig } from "vitest/config";
  *   export default defineConfig({ plugins: [cloudflareTest({ ... })], test: { ... } });
  *
  * Usage:
- *   npx jscodeshift -t node_modules/@cloudflare/vitest-pool-workers/dist/codemods/vitest-v3-to-v4.mjs vitest.config.ts
+ *   npx jscodeshift -t node_modules/@cloudflare/vitest-plugin/dist/codemods/vitest-v3-to-v4.mjs vitest.config.ts
  */
 
 // Minimal jscodeshift types — avoids requiring @types/jscodeshift as a dependency.
@@ -156,7 +156,7 @@ export default function transform(fileInfo: FileInfo, api: API): string {
 
 	// Update the import: change source and swap defineWorkersProject → cloudflareTest
 	configImports.forEach((path: NodePath<ImportDeclarationNode>) => {
-		path.node.source.value = "@cloudflare/vitest-pool-workers";
+		path.node.source.value = "@cloudflare/vitest-plugin";
 		path.node.specifiers = [
 			j.importSpecifier(j.identifier("cloudflareTest")),
 			...(path.node.specifiers?.filter(

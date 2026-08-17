@@ -1,6 +1,6 @@
 ---
 "wrangler": patch
-"@cloudflare/vitest-pool-workers": patch
+"@cloudflare/vitest-plugin": patch
 ---
 
-Honor `access.dev` when running Workers with `@cloudflare/vitest-pool-workers`, so `ctx.access.getIdentity()` returns the configured identity just as it does with `wrangler dev`.
+Honor `access.dev` when running Workers with `@cloudflare/vitest-plugin`, so `ctx.access.getIdentity()` returns the configured identity just as it does with `wrangler dev`.

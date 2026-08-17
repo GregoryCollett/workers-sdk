@@ -2,7 +2,7 @@
 "wrangler": patch
 "create-cloudflare": patch
 "@cloudflare/vite-plugin": patch
-"@cloudflare/vitest-pool-workers": patch
+"@cloudflare/vitest-plugin": patch
 ---
 
 Use a fixed default compatibility date rather than the current date

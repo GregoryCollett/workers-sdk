@@ -1,5 +1,5 @@
 ---
-"@cloudflare/vitest-plugin": minor
+"@cloudflare/vitest-plugin": major
 ---
 
 Mocking requests with MSW in Worker tests now requires MSW >= 2.14

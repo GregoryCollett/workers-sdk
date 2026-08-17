@@ -1,5 +1,5 @@
 ---
-"@cloudflare/vitest-pool-workers": patch
+"@cloudflare/vitest-plugin": patch
 ---
 
 Restore typed `inject()` keys in `cloudflareTest()` pool options

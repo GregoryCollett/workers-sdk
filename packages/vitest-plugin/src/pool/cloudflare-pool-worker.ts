@@ -36,7 +36,7 @@ import type {
 
 export class CloudflarePoolWorker implements PoolWorker {
 	name = "cloudflare-pool";
-	private readonly debug = util.debuglog("vitest-pool-workers");
+	private readonly debug = util.debuglog("vitest-plugin");
 	private mf: Miniflare | undefined;
 	private socket: WebSocket | undefined;
 	private parsedPoolOptions: WorkersPoolOptionsWithDefines | undefined;

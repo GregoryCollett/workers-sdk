@@ -4,15 +4,20 @@
  *
  * The package was renamed in v1. This rewrites the package specifier in all
  * `import`/`export ... from`/`require()` statements, preserving any subpath
- * (e.g. `/config`, `/types`):
+ * (e.g. `/types`):
  *
  *   import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
- *   import { defineWorkersProject } from "@cloudflare/vitest-pool-workers/config";
+ *   import type {} from "@cloudflare/vitest-pool-workers/types";
  *
  * Into:
  *
  *   import { cloudflareTest } from "@cloudflare/vitest-plugin";
- *   import { defineWorkersProject } from "@cloudflare/vitest-plugin/config";
+ *   import type {} from "@cloudflare/vitest-plugin/types";
+ *
+ * Note: this codemod migrates the v4 API (`cloudflareTest`). If your config
+ * still uses the v3 `defineWorkersProject` API imported from
+ * `@cloudflare/vitest-pool-workers/config`, run the `vitest-v3-to-v4` codemod
+ * first, which upgrades the API and emits the new package name.
  *
  * Usage:
  *   npx jscodeshift -t node_modules/@cloudflare/vitest-plugin/dist/codemods/vitest-pool-workers-to-vitest-plugin.mjs vitest.config.ts

@@ -31,7 +31,7 @@ export default defineWorkersProject({
 
 		expect(output).toMatchInlineSnapshot(`
 			"
-			import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
+			import { cloudflareTest } from "@cloudflare/vitest-plugin";
 
 			import { defineConfig } from "vitest/config";
 
@@ -64,7 +64,7 @@ export default defineWorkersProject({
 
 		expect(output).toMatchInlineSnapshot(`
 			"
-			import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
+			import { cloudflareTest } from "@cloudflare/vitest-plugin";
 
 			import { defineConfig } from "vitest/config";
 
@@ -99,7 +99,7 @@ export default defineWorkersProject({
 
 		expect(output).toMatchInlineSnapshot(`
 			"
-			import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
+			import { cloudflareTest } from "@cloudflare/vitest-plugin";
 
 			import { defineConfig } from "vitest/config";
 
@@ -157,7 +157,7 @@ export default defineWorkersProject({
 
 		expect(output).toMatchInlineSnapshot(`
 			"
-			import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
+			import { cloudflareTest } from "@cloudflare/vitest-plugin";
 
 			import { defineConfig } from "vitest/config";
 
@@ -190,7 +190,7 @@ export default defineWorkersProject({
 
 		expect(output).toMatchInlineSnapshot(`
 			"
-			import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
+			import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
 
 			import { defineConfig } from "vitest/config";
 
