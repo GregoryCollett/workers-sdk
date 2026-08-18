@@ -62,6 +62,8 @@ describe("runAutoConfig()", () => {
 			observability: { enabled: true },
 		});
 		expect(summary.buildConfig).toEqual({ assetsDirectory: "public" });
+		expect(summary.deployCommand).toBe("npx cf deploy");
+		expect(summary.versionCommand).toBe("npx cf versions upload");
 		expect(readFileSync("cloudflare.config.ts", "utf8")).toContain(
 			'import { defineWorker } from "cf/config";\n\nexport default defineWorker({\n  "name": "my-static-app"'
 		);

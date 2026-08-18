@@ -155,10 +155,10 @@ export async function runAutoConfig(
 				autoConfigDetails.buildCommand,
 			deploy:
 				dryRunConfigurationResults.deployCommandOverride ??
-				(target === "wrangler" ? `${npx} wrangler deploy` : "cf deploy"),
+				`${npx} ${target} deploy`,
 			version:
 				dryRunConfigurationResults.versionCommandOverride ??
-				(target === "wrangler" ? `${npx} wrangler versions upload` : undefined),
+				`${npx} ${target} versions upload`,
 		},
 		target,
 		context,
