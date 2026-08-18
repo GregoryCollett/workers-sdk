@@ -175,6 +175,9 @@ describe("wrangler setup", () => {
 
 		expect(autoconfigOutputEntry.summary).toMatchInlineSnapshot(`
 			{
+			  "dependenciesToInstall": [
+			    "wrangler",
+			  ],
 			  "deployCommand": "npx wrangler deploy",
 			  "frameworkId": "static",
 			  "outputDir": "public",
@@ -194,7 +197,6 @@ describe("wrangler setup", () => {
 			      "enabled": true,
 			    },
 			  },
-			  "wranglerInstall": true,
 			}
 		`);
 	});

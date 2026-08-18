@@ -40,6 +40,7 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 					deploy: "npx wrangler deploy",
 					version: "npx wrangler versions upload",
 				},
+				[],
 				"wrangler",
 				context
 			);
@@ -61,6 +62,7 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 			expect(summary).toMatchInlineSnapshot(`
 				{
 				  "buildCommand": "npm run build",
+				  "dependenciesToInstall": [],
 				  "deployCommand": "npx wrangler deploy",
 				  "frameworkId": "static",
 				  "outputDir": "public",
@@ -74,7 +76,6 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 				      "enabled": true,
 				    },
 				  },
-				  "wranglerInstall": false,
 				}
 			`);
 		});
@@ -102,6 +103,7 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 					deploy: "npx wrangler deploy",
 					version: "npx wrangler versions upload",
 				},
+				["wrangler"],
 				"wrangler",
 				context
 			);
@@ -116,6 +118,9 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 			expect(summary).toMatchInlineSnapshot(`
 				{
 				  "buildCommand": "npm run build",
+				  "dependenciesToInstall": [
+				    "wrangler",
+				  ],
 				  "deployCommand": "npx wrangler deploy",
 				  "frameworkId": "static",
 				  "outputDir": "dist",
@@ -132,7 +137,6 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 				      "enabled": true,
 				    },
 				  },
-				  "wranglerInstall": true,
 				}
 			`);
 		});
@@ -162,6 +166,7 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 					deploy: "npx wrangler deploy",
 					version: "npx wrangler versions upload",
 				},
+				["wrangler"],
 				"wrangler",
 				context
 			);
@@ -176,6 +181,9 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 			expect(summary).toMatchInlineSnapshot(`
 				{
 				  "buildCommand": "npm run build",
+				  "dependenciesToInstall": [
+				    "wrangler",
+				  ],
 				  "deployCommand": "npx wrangler deploy",
 				  "frameworkId": "static",
 				  "outputDir": "out",
@@ -192,7 +200,6 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 				      "enabled": true,
 				    },
 				  },
-				  "wranglerInstall": true,
 				}
 			`);
 		});
@@ -218,6 +225,7 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 					build: "npm run build",
 					deploy: "cf deploy",
 				},
+				["cf", "wrangler"],
 				"cf",
 				context
 			);
@@ -252,6 +260,7 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 					build: "npm run build",
 					deploy: "npx wrangler deploy",
 				},
+				[],
 				"wrangler",
 				context
 			);
@@ -285,6 +294,7 @@ describe("autoconfig run - buildOperationsSummary()", () => {
 					build: "npm run build",
 					deploy: "npx wrangler deploy",
 				},
+				[],
 				"wrangler",
 				context
 			);

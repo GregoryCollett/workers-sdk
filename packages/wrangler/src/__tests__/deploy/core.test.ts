@@ -1940,7 +1940,7 @@ describe("deploy", () => {
 				scripts: {
 					build: "npm run build-my-static-site",
 				},
-				wranglerInstall: true,
+				dependenciesToInstall: ["wrangler"],
 				wranglerConfig,
 				outputDir: "public",
 			};
@@ -1965,6 +1965,9 @@ describe("deploy", () => {
 		);
 		expect(autoconfigOutputEntry?.summary).toMatchInlineSnapshot(`
 			{
+			  "dependenciesToInstall": [
+			    "wrangler",
+			  ],
 			  "outputDir": "public",
 			  "scripts": {
 			    "build": "npm run build-my-static-site",
@@ -1976,7 +1979,6 @@ describe("deploy", () => {
 			    "compatibility_date": "2025-12-02",
 			    "name": "my-site",
 			  },
-			  "wranglerInstall": true,
 			}
 		`);
 	});

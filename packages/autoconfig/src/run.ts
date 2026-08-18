@@ -113,6 +113,12 @@ export async function runAutoConfig(
 	};
 
 	const { packageManager } = autoConfigDetails;
+	const dependenciesToInstall: string[] =
+		autoConfigDetails.packageJson && enableCliInstallation
+			? target === "cf"
+				? ["cf", "wrangler"]
+				: ["wrangler"]
+			: [];
 
 	const isWorkspaceRoot = autoConfigDetails.isWorkspaceRoot ?? false;
 
@@ -160,6 +166,7 @@ export async function runAutoConfig(
 				dryRunConfigurationResults.versionCommandOverride ??
 				`${npx} ${target} versions upload`,
 		},
+		dependenciesToInstall,
 		target,
 		context,
 		dryRunConfigurationResults.packageJsonScriptsOverrides
@@ -189,18 +196,14 @@ export async function runAutoConfig(
 		`Running autoconfig with:\n${JSON.stringify(autoConfigDetails, null, 2)}...`
 	);
 
-	if (
-		target === "cf" &&
-		autoConfigSummary.wranglerInstall &&
-		enableCliInstallation
-	) {
+	if (dependenciesToInstall.includes("cf")) {
 		await installPackages(packageManager.type, ["cf@latest"], {
 			dev: true,
 			isWorkspaceRoot,
 		});
 	}
 
-	if (autoConfigSummary.wranglerInstall && enableCliInstallation) {
+	if (dependenciesToInstall.includes("wrangler")) {
 		await installWrangler(packageManager.type, isWorkspaceRoot);
 	}
 
@@ -481,6 +484,7 @@ function indentFileContent(content: string): string {
  * @param workerConfig - The resolved Worker configuration.
  * @param configurationResults - The framework configuration results.
  * @param projectCommands - The build, deploy, and version commands for the project.
+ * @param dependenciesToInstall - The project dependencies to install.
  * @param target - The configuration target.
  * @param context - The autoconfig context providing logger and other dependencies.
  * @param packageJsonScriptsOverrides - Optional overrides for package.json script entries.
@@ -497,6 +501,7 @@ export async function buildOperationsSummary(
 		deploy: string;
 		version?: string;
 	},
+	dependenciesToInstall: string[],
 	target: AutoConfigTarget,
 	context: AutoConfigContext,
 	packageJsonScriptsOverrides?: PackageJsonScriptsOverrides
@@ -509,7 +514,7 @@ export async function buildOperationsSummary(
 			: null;
 
 	const summary: AutoConfigSummary = {
-		wranglerInstall: false,
+		dependenciesToInstall,
 		scripts: {},
 		...(target === "wrangler"
 			? { wranglerConfig: wranglerConfig ?? undefined }
@@ -524,16 +529,15 @@ export async function buildOperationsSummary(
 		versionCommand: projectCommands.version,
 	};
 
-	if (autoConfigDetails.packageJson) {
-		summary.wranglerInstall = true;
-
+	if (dependenciesToInstall.length > 0) {
 		logger.log("📦 Install packages:");
-		if (target === "cf") {
-			logger.log(` - cf (devDependency)`);
+		for (const dependency of dependenciesToInstall) {
+			logger.log(` - ${dependency} (devDependency)`);
 		}
-		logger.log(` - wrangler (devDependency)`);
 		logger.log("");
+	}
 
+	if (autoConfigDetails.packageJson) {
 		summary.scripts = {
 			deploy:
 				packageJsonScriptsOverrides?.deploy ??

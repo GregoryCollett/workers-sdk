@@ -47,7 +47,7 @@ const mockDetails = {
 /** Minimal mock satisfying {@link AutoConfigSummary}. */
 const mockSummary = {
 	scripts: {},
-	wranglerInstall: false,
+	dependenciesToInstall: [],
 	outputDir: "dist",
 } as unknown as AutoConfigSummary;
 

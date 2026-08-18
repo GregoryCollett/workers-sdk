@@ -1,5 +1,6 @@
 ---
 "@cloudflare/autoconfig": minor
+"wrangler": minor
 ---
 
 Default autoconfig to `cloudflare.config.ts`
@@ -9,3 +10,5 @@ Autoconfig now detects and configures projects for `cf` by default. It installs 
 Wrangler retains its existing detection, configuration files, and scripts by passing `target: "wrangler"`.
 
 The framework configuration API now returns Worker configuration and build configuration separately. `enableWranglerInstallation` has also been renamed to `enableCliInstallation` because `cf` setup installs both CLIs.
+
+Autoconfig summaries now report the explicit `dependenciesToInstall` instead of the legacy `wranglerInstall` boolean.

@@ -75,7 +75,7 @@ export type AutoConfigOptions = {
 
 export type AutoConfigSummary = {
 	scripts: Record<string, string>;
-	wranglerInstall: boolean;
+	dependenciesToInstall: string[];
 	workerConfig?: WorkerConfigInput;
 	buildConfig?: BuildConfig;
 	wranglerConfig?: RawConfig;
