@@ -646,6 +646,20 @@ async function load(
 	return buildModuleResponse(rawTarget, { commonJsModule: contents });
 }
 
+/** Dispatches module fallback requests using Workerd's selected protocol. */
+export async function handleModuleFallbackRequest(
+	vite: Vite.ViteDevServer,
+	request: Request
+): Promise<Response> {
+	const parsed = await parseModuleFallbackRequest(request);
+	if (parsed === null) {
+		return new Response("Invalid module fallback request", { status: 400 });
+	}
+	return parsed.protocol === "v1"
+		? handleV1ModuleFallbackRequest(vite, request)
+		: handleV2ModuleFallbackRequest(vite, parsed);
+}
+
 /** Handles the legacy V1 fallback protocol. */
 async function handleV1ModuleFallbackRequest(
 	vite: Vite.ViteDevServer,
@@ -1032,18 +1046,4 @@ async function linkV2VitestModule(
 			contents.slice(0, imported.s) + replacement + contents.slice(imported.e);
 	}
 	return contents;
-}
-
-/** Dispatches module fallback requests using Workerd's selected protocol. */
-export async function handleModuleFallbackRequest(
-	vite: Vite.ViteDevServer,
-	request: Request
-): Promise<Response> {
-	const parsed = await parseModuleFallbackRequest(request);
-	if (parsed === null) {
-		return new Response("Invalid module fallback request", { status: 400 });
-	}
-	return parsed.protocol === "v1"
-		? handleV1ModuleFallbackRequest(vite, request)
-		: handleV2ModuleFallbackRequest(vite, parsed);
 }
