@@ -291,9 +291,10 @@ export class __VITEST_POOL_WORKERS_RUNNER_DURABLE_OBJECT__ extends DurableObject
 					};
 					transport?: { invoke?: (...args: unknown[]) => unknown };
 				};
-				const evaluator = runner.evaluator;
-				if (evaluator?.createRequire) {
-					const originalCreateRequire = evaluator.createRequire.bind(evaluator);
+				if (runner.evaluator?.createRequire) {
+					const originalCreateRequire = runner.evaluator.createRequire.bind(
+						runner.evaluator
+					);
 
 					// workerd echoes percent-encoded module names back to the fallback
 					// service, so the require base URL must carry the sentinel marker.
@@ -301,7 +302,7 @@ export class __VITEST_POOL_WORKERS_RUNNER_DURABLE_OBJECT__ extends DurableObject
 						return originalCreateRequire(markCreateRequireUrl(url));
 					}
 
-					evaluator.createRequire = createRequire;
+					runner.evaluator.createRequire = createRequire;
 				} else {
 					__console.warn(
 						"[vitest-pool-workers] Could not patch module runner createRequire. " +
@@ -309,12 +310,12 @@ export class __VITEST_POOL_WORKERS_RUNNER_DURABLE_OBJECT__ extends DurableObject
 					);
 				}
 				if (
-					evaluator?.runExternalModule !== undefined &&
+					runner.evaluator?.runExternalModule !== undefined &&
 					import.meta.resolve !== undefined
 				) {
 					const originalRunExternalModule =
-						evaluator.runExternalModule.bind(evaluator);
-					evaluator.runExternalModule = (id) => {
+						runner.evaluator.runExternalModule.bind(runner.evaluator);
+					runner.evaluator.runExternalModule = (id) => {
 						// Native dynamic import needs a URL for package subpaths under NMR.
 						const resolved =
 							!id.startsWith("/") && !/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(id)
