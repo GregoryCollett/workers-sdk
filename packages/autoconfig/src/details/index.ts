@@ -1,8 +1,9 @@
 import assert from "node:assert";
-import { existsSync, statSync } from "node:fs";
+import { statSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { brandColor } from "@cloudflare/cli-shared-helpers/colors";
+import { findCloudflareConfigPath } from "@cloudflare/config";
 import {
 	checkWorkerNameValidity,
 	getWorkerName,
@@ -24,8 +25,6 @@ import type {
 } from "../types";
 import type { PackageManager } from "@cloudflare/workers-utils";
 import type { Config, PackageJSON } from "@cloudflare/workers-utils";
-
-const CLOUDFLARE_CONFIG_FILE = "cloudflare.config.ts";
 
 /**
  * Asserts that the current project being targeted for autoconfig is not already configured.
@@ -101,10 +100,7 @@ export async function getDetailsForAutoConfig({
 
 	logger.debug(`Running autoconfig detection in ${projectPath}...`);
 
-	if (
-		target === "cf" &&
-		existsSync(resolve(projectPath, CLOUDFLARE_CONFIG_FILE))
-	) {
+	if (target === "cf" && findCloudflareConfigPath(projectPath) !== undefined) {
 		return {
 			configured: true,
 			projectPath,

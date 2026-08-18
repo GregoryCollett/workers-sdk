@@ -28,6 +28,7 @@ export {
 	WorkerEntrypointExportSchema,
 } from "./schema";
 export { generateTypes } from "./generate";
+export { findCloudflareConfigPath } from "./discovery";
 export { convertToWranglerConfig } from "./convert";
 export { loadConfig, registerConfigHooks } from "./load";
 export { loadAndValidateConfig } from "./config-loader";
