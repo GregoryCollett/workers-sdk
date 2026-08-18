@@ -75,7 +75,6 @@ const monkeypatchedSetTimeout = (...args: Parameters<typeof setTimeout>) => {
 	const callbackName = args[0]?.name ?? "";
 	const callerFileName = getCallerFileName(monkeypatchedSetTimeout);
 	const fromVitest =
-		/\/bundle\/vitest\//.test(callerFileName ?? "") ||
 		/\/node_modules\/(\.pnpm\/|\.store\/)?vitest/.test(callerFileName ?? "") ||
 		/\/packages\/vitest\/dist/.test(callerFileName ?? "") ||
 		/\/node_modules\/(\.pnpm\/|\.store\/)?@voidzero-dev[+/]vite-plus-test/.test(
@@ -278,10 +277,7 @@ export class __VITEST_POOL_WORKERS_RUNNER_DURABLE_OBJECT__ extends DurableObject
 			// Durable Object". See: https://github.com/cloudflare/workers-sdk/issues/12924
 			onModuleRunner(moduleRunner: unknown) {
 				const runner = moduleRunner as {
-					evaluator?: {
-						createRequire?: CreateRequire;
-						runExternalModule?: (id: string) => Promise<unknown>;
-					};
+					evaluator?: { createRequire?: CreateRequire };
 					options?: {
 						createImportMeta?: (
 							modulePath: string
@@ -310,28 +306,11 @@ export class __VITEST_POOL_WORKERS_RUNNER_DURABLE_OBJECT__ extends DurableObject
 					);
 				}
 				if (
-					runner.evaluator?.runExternalModule !== undefined &&
+					runner.options?.createImportMeta !== undefined &&
 					import.meta.resolve !== undefined
 				) {
-					const originalRunExternalModule =
-						runner.evaluator.runExternalModule.bind(runner.evaluator);
-					runner.evaluator.runExternalModule = (id) => {
-						// Native dynamic import needs a URL for package subpaths under NMR.
-						const resolved =
-							!id.startsWith("/") && !/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(id)
-								? new URL(`/bundle/${id}`, "file:///").href
-								: id;
-						return originalRunExternalModule(resolved);
-					};
-				}
-				const runnerOptions = runner.options;
-				const originalCreateImportMeta = runnerOptions?.createImportMeta;
-				if (
-					runnerOptions !== undefined &&
-					originalCreateImportMeta !== undefined &&
-					import.meta.resolve !== undefined
-				) {
-					runnerOptions.createImportMeta = async (modulePath) => {
+					const originalCreateImportMeta = runner.options.createImportMeta;
+					runner.options.createImportMeta = async (modulePath) => {
 						const meta = await originalCreateImportMeta(modulePath);
 						// Workerd's native resolver is bound to the Vitest module that
 						// created it, so resolve inlined modules relative to their own URL.

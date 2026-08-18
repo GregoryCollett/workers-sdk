@@ -20,11 +20,10 @@ import type { Vite } from "vitest/node";
 // The fallback handler only reads `vite.pluginContainer.resolveId`, and only
 // when a specifier can't be resolved directly from the filesystem. Returning
 // `null` mimics Vite failing to resolve, exercising the 404 fall-through.
-function fakeVite(resolvedId?: string): Vite.ViteDevServer {
+function fakeVite(): Vite.ViteDevServer {
 	return {
 		pluginContainer: {
-			resolveId: async () =>
-				resolvedId === undefined ? null : { id: resolvedId },
+			resolveId: async () => null,
 		},
 	} as unknown as Vite.ViteDevServer;
 }
@@ -44,6 +43,7 @@ function fakeViteResolvingTo(id: string): Vite.ViteDevServer {
 	} as unknown as Vite.ViteDevServer;
 }
 
+/** Creates a Vite server stub that resolves selected specifiers. */
 function fakeViteResolving(
 	resolvedIds: Record<string, string>
 ): Vite.ViteDevServer {
@@ -76,12 +76,12 @@ function moduleFallbackRequest(options: {
 	});
 }
 
+/** Creates a Workerd V2 module fallback request. */
 function v2ModuleFallbackRequest(options: {
 	type: "import" | "require" | "internal";
 	specifier: string;
 	referrer: string;
 	rawSpecifier?: string;
-	attributes?: Array<{ name: string; value: string }>;
 }): Request {
 	return new Request("http://localhost/", {
 		method: "POST",
@@ -549,11 +549,9 @@ describe("handleModuleFallbackRequest new module registry", () => {
 
 	it("redirects aliases to canonical module URLs", async ({ expect }) => {
 		const filePath = path.join(tmp, "package.mjs");
-		const contents = "export default 42;";
-		fs.writeFileSync(filePath, contents);
 
 		const response = await handleModuleFallbackRequest(
-			fakeVite(filePath),
+			fakeViteResolvingTo(filePath),
 			v2ModuleFallbackRequest({
 				type: "import",
 				specifier: "file:///bundle/package",
@@ -573,7 +571,6 @@ describe("handleModuleFallbackRequest new module registry", () => {
 		const contents = [
 			'import value from "package";',
 			'export const lazy = import("./lazy.mjs");',
-			'import assert from "node:assert";',
 		].join("\n");
 		fs.writeFileSync(filePath, contents);
 

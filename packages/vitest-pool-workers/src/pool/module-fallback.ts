@@ -12,8 +12,8 @@ import { workerdBuiltinModules } from "../shared/builtin-modules";
 import { ENCODED_PATH_PREFIX } from "../shared/module-path";
 import { isFileNotFoundError } from "./helpers";
 import type {
-	ParsedModuleFallbackRequest,
 	Request,
+	V2ModuleFallbackRequest,
 	Worker_Module,
 } from "miniflare";
 import type { Vite } from "vitest/node";
@@ -646,6 +646,7 @@ async function load(
 	return buildModuleResponse(rawTarget, { commonJsModule: contents });
 }
 
+/** Handles the legacy V1 fallback protocol. */
 async function handleV1ModuleFallbackRequest(
 	vite: Vite.ViteDevServer,
 	request: Request
@@ -755,7 +756,9 @@ async function handleV1ModuleFallbackRequest(
 type V2ResolveMethod = ResolveMethod | "internal";
 
 const vitestRootSpecifiers = new Set(["vitest/worker", "cloudflare:snapshot"]);
+const v2VitestModulePaths = new WeakMap<Vite.ViteDevServer, Set<string>>();
 
+/** Resolves a V2 request to a local module path. */
 async function resolveV2(
 	vite: Vite.ViteDevServer,
 	method: V2ResolveMethod,
@@ -802,6 +805,7 @@ async function resolveV2(
 	return resolved;
 }
 
+/** Converts a Workerd module URL into a target suitable for Vite resolution. */
 function moduleUrlToResolutionTarget(specifier: string): string {
 	const url = new URL(specifier);
 	if (url.protocol !== "file:") {
@@ -811,6 +815,7 @@ function moduleUrlToResolutionTarget(specifier: string): string {
 	return decodeEncodedSpecifier(filePath) + url.search;
 }
 
+/** Converts a local module path, including any query, into a file URL. */
 function pathToModuleUrl(filePath: string): string {
 	const queryIndex = filePath.indexOf("?");
 	if (queryIndex === -1) {
@@ -822,6 +827,7 @@ function pathToModuleUrl(filePath: string): string {
 	);
 }
 
+/** Builds the JSON response expected by Workerd's V2 fallback protocol. */
 function buildV2ModuleResponse(
 	name: string,
 	contents: ModuleContents,
@@ -843,6 +849,7 @@ type LoadedV2Module = {
 	namedExports?: Iterable<string>;
 };
 
+/** Loads a resolved path using Workerd's native V2 module types. */
 async function loadV2Module(
 	vite: Vite.ViteDevServer,
 	logBase: string,
@@ -891,11 +898,7 @@ async function loadV2Module(
 	return { contents: { commonJsModule: contents }, namedExports };
 }
 
-type V2ModuleFallbackRequest = Extract<
-	ParsedModuleFallbackRequest,
-	{ protocol: "v2" }
->;
-
+/** Recovers the source import specifier from a V2 fallback request. */
 function getV2RequestSpecifier(
 	request: V2ModuleFallbackRequest,
 	target: string,
@@ -913,22 +916,7 @@ function getV2RequestSpecifier(
 	);
 }
 
-function handleV2ModuleFallbackError(
-	request: V2ModuleFallbackRequest,
-	target: string,
-	referrer: string,
-	logBase: string,
-	error: unknown
-): Response {
-	debuglog(logBase, "error:", error);
-	console.error(
-		`[vitest-pool-workers] Failed to ${request.type} ${JSON.stringify(target)} from ${JSON.stringify(referrer)}.`,
-		"To resolve this, try bundling the relevant dependency with Vite.",
-		"For more details, refer to https://developers.cloudflare.com/workers/testing/vitest-integration/known-issues/#module-resolution"
-	);
-	return new Response(null, { status: 404 });
-}
-
+/** Handles a parsed V2 fallback request. */
 async function handleV2ModuleFallbackRequest(
 	vite: Vite.ViteDevServer,
 	request: V2ModuleFallbackRequest
@@ -937,14 +925,13 @@ async function handleV2ModuleFallbackRequest(
 		return new Response("Invalid module fallback request", { status: 400 });
 	}
 
-	const resolvedPaths = getV2ResolvedPaths(vite);
-	const vitestModulePaths = getV2VitestModulePaths(vite);
-	const target =
-		resolvedPaths.get(request.specifier) ??
-		moduleUrlToResolutionTarget(request.specifier);
-	const referrer =
-		resolvedPaths.get(request.referrer) ??
-		moduleUrlToResolutionTarget(request.referrer);
+	let vitestModulePaths = v2VitestModulePaths.get(vite);
+	if (vitestModulePaths === undefined) {
+		vitestModulePaths = new Set();
+		v2VitestModulePaths.set(vite, vitestModulePaths);
+	}
+	const target = moduleUrlToResolutionTarget(request.specifier);
+	const referrer = moduleUrlToResolutionTarget(request.referrer);
 	const specifier = getV2RequestSpecifier(request, target, referrer);
 	const logBase = `${request.type}(${JSON.stringify(target)}) relative to ${referrer}:`;
 
@@ -956,7 +943,6 @@ async function handleV2ModuleFallbackRequest(
 			specifier,
 			referrer
 		);
-		resolvedPaths.set(request.specifier, filePath);
 		if (
 			vitestRootSpecifiers.has(specifier) ||
 			vitestModulePaths.has(referrer)
@@ -992,43 +978,20 @@ async function handleV2ModuleFallbackRequest(
 			module.namedExports
 		);
 	} catch (error) {
-		return handleV2ModuleFallbackError(
-			request,
-			target,
-			referrer,
-			logBase,
-			error
+		debuglog(logBase, "error:", error);
+		console.error(
+			`[vitest-pool-workers] Failed to ${request.type} ${JSON.stringify(target)} from ${JSON.stringify(referrer)}.`,
+			"To resolve this, try bundling the relevant dependency with Vite.",
+			"For more details, refer to https://developers.cloudflare.com/workers/testing/vitest-integration/known-issues/#module-resolution"
 		);
+		return new Response(null, { status: 404 });
 	}
 }
 
-// Workerd identifies fallback modules with URLs, while Vite resolves imports
-// from filesystem paths. Keep both redirected aliases and canonical URLs tied
-// to the file Vite resolved so relative imports use the correct referrer.
-const v2ResolvedPaths = new WeakMap<Vite.ViteDevServer, Map<string, string>>();
-const v2VitestModulePaths = new WeakMap<Vite.ViteDevServer, Set<string>>();
-
-function getV2ResolvedPaths(vite: Vite.ViteDevServer): Map<string, string> {
-	let resolvedPaths = v2ResolvedPaths.get(vite);
-	if (resolvedPaths === undefined) {
-		resolvedPaths = new Map();
-		v2ResolvedPaths.set(vite, resolvedPaths);
-	}
-	return resolvedPaths;
-}
-
-function getV2VitestModulePaths(vite: Vite.ViteDevServer): Set<string> {
-	let modulePaths = v2VitestModulePaths.get(vite);
-	if (modulePaths === undefined) {
-		modulePaths = new Set();
-		v2VitestModulePaths.set(vite, modulePaths);
-	}
-	return modulePaths;
-}
-
-// Vitest's bootstrap is loaded natively before its Vite module runner exists.
-// Link only this internal graph to canonical file URLs so shared Vitest state is
-// instantiated once. User modules are returned unchanged and resolved by Workerd.
+/**
+ * Links Vitest's native bootstrap graph to canonical module URLs so its shared
+ * state is instantiated once. User modules are left for Workerd to resolve.
+ */
 async function linkV2VitestModule(
 	vite: Vite.ViteDevServer,
 	contents: string,
@@ -1071,6 +1034,7 @@ async function linkV2VitestModule(
 	return contents;
 }
 
+/** Dispatches module fallback requests using Workerd's selected protocol. */
 export async function handleModuleFallbackRequest(
 	vite: Vite.ViteDevServer,
 	request: Request

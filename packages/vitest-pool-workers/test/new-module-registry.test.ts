@@ -16,9 +16,7 @@ test(
 				exports.named = 42;
 				exports.defaultValue = "commonjs";
 			`,
-			"helper.ts": dedent`
-				export const value = 42;
-			`,
+			"helper.ts": "export const value = 42;",
 			"node_modules/nmr-test-dependency/package.json": JSON.stringify({
 				name: "nmr-test-dependency",
 				type: "module",
@@ -30,15 +28,6 @@ test(
 				}
 			`,
 			"node_modules/nmr-test-dependency/value.mjs": "export const value = 42;",
-			"node_modules/nmr-test-dependency/throwing.mjs": dedent`
-				import { value } from "./value.mjs";
-				function fail() {
-				  throw new Error(\`failure \${value}\`);
-				}
-				export {
-				  fail
-				};
-			`,
 			"index.test.ts": dedent`
 				import dependency, { named } from "./dependency.cjs";
 				import { it } from "vitest";
@@ -55,19 +44,6 @@ test(
 
 					const computed = await load("value");
 					expect(computed.value).toBe(42);
-
-					const throwing = await load("throwing");
-					try {
-						throwing.fail();
-					} catch (error) {
-						if (!(error instanceof Error)) {
-							throw error;
-						}
-						// Canonicalising imports must preserve generated source locations.
-						expect(error.stack).toMatch(
-							/nmr-test-dependency[\\/]throwing\\.mjs:3:9/
-						);
-					}
 				});
 			`,
 		});
